@@ -77,71 +77,71 @@
         <div id="agenda_html"></div>
         <script type="text/javascript">
 
-        	//Creando la agenda cultural timbo, en tres humanos pasos.
+	    //Creando la agenda cultural timbo, en tres humanos pasos.
 
-        	//Cosechar(): buscar la data, conservarla en la base (db) y darsela a Cocinar().
-        	//Cocinar(): ordenar la data, pasarla a un formato mas entendible, y darsela a Presentar().
-        	//Presentar(): recorrer la data para generar el html y mostrarlo.
+	    //Cosechar(): buscar la data, conservarla en la base (db) y darsela a Cocinar().
+	    //Cocinar(): ordenar la data, pasarla a un formato mas entendible, y darsela a Presentar().
+	    //Presentar(): recorrer la data para generar el html y mostrarlo.
 
-        	function Cosechar(){
+            function Cosechar(){
 
-        		//Esta es la clave de identificacion unica de la spreadsheet en google.
-        		var SpreadsheetId = "1wp2c-3N0Bw2cgdQyET_Oo1BRZtPmAT6yACfJGlue8Rs";
+		//Esta es la clave de identificacion unica de la spreadsheet en google.
+		var SpreadsheetId = "1wp2c-3N0Bw2cgdQyET_Oo1BRZtPmAT6yACfJGlue8Rs";
 
-        		//Abrir la base de datos.
-				var requestDB = indexedDB.open("agendaTimbo");
-				var db = "";
+		//Abrir la base de datos.
+		var requestDB = indexedDB.open("agendaTimbo");
+		var db = "";
 
-				//Si no existe aún la tabla para los eventos, crear una nueva.
-        		requestDB.onupgradeneeded = function(event) {
-				  db = event.target.result;
-				  var objectStore = db.createObjectStore("eventos", { autoIncrement : true });
+			//Si no existe aún la tabla para los eventos, crear una nueva.
+		requestDB.onupgradeneeded = function(event) {
+		  db = event.target.result;
+		  var objectStore = db.createObjectStore("eventos", { autoIncrement : true });
+		};
+
+		//Base lista para usar.
+		requestDB.onsuccess = function (evt) {
+			db = requestDB.result;
+			var xhr = new XMLHttpRequest();
+
+			//Buscar la data a google
+			//Cambiar el /1/ si no anda, representa a la cantidad de spreadsheets que tengas, creo..
+			xhr.open("GET", "https://spreadsheets.google.com/feeds/cells/"+SpreadsheetId+"/1/public/basic?alt=json", false);
+			try{
+		    		xhr.send();
+			}catch(err){
+				//No hay conexion a internet, avisar.
+				var offline = document.createElement('p');
+	                        offline.className = 'offline';
+	                        offline.appendChild(document.createTextNode("SIN CONEXION - MOSTRANDO DATA GUARDADA"));
+	                        document.body.appendChild(offline);
+	                        //Agarrar la data vieja guardada en la base y chau.
+				agarrar();
+				return;
+			}
+
+			//Almacenar la nueva data en la base.
+			//Primero borro lo viejo.
+			db.transaction(["eventos"], "readwrite")
+			.objectStore("eventos").clear().onsuccess = function(){
+				//Despues guardo lo nuevo.
+				db.transaction("eventos", "readwrite")
+				.objectStore("eventos").add(xhr.responseText).onsuccess = function(){
+					//Agarro la data recien cosechada.
+					agarrar();
 				};
+			};
+		};
 
-				//Base lista para usar.
-				requestDB.onsuccess = function (evt) {
-					db = requestDB.result;
-					var xhr = new XMLHttpRequest();
-
-					//Buscar la data a google
-					//Cambiar el /1/ si no anda, representa a la cantidad de spreadsheets que tengas, creo..
-				    xhr.open("GET", "https://spreadsheets.google.com/feeds/cells/"+SpreadsheetId+"/1/public/basic?alt=json", false);
-				    try{
-				    	xhr.send();
-					}catch(err){
-						//No hay conexion a internet, avisar.
-						var offline = document.createElement('p');
-	                    offline.className = 'offline';
-	                    offline.appendChild(document.createTextNode("SIN CONEXION - MOSTRANDO DATA GUARDADA"));
-	                    document.body.appendChild(offline);
-	                    //Agarrar la data vieja guardada en la base y chau.
-						agarrar();
-						return;
-					}
-
-					//Almacenar la nueva data en la base.
-					//Primero borro lo viejo.
-					db.transaction(["eventos"], "readwrite")
-					.objectStore("eventos").clear().onsuccess = function(){
-						//Despues guardo lo nuevo.
-						db.transaction("eventos", "readwrite")
-						.objectStore("eventos").add(xhr.responseText).onsuccess = function(){
-							//Agarro la data recien cosechada.
-							agarrar();
-						};
-					};
-				};
-
-				function agarrar(){
-					//Aagarra lo que haya.
-					db.transaction("eventos")
-					.objectStore("eventos").openCursor().onsuccess = function(ev){
-						var cursor = event.target.result;
-				        //lo prepara y lo manda a la cocina.
-				        Cocinar(JSON.parse(cursor.value));
-					};
-				}
-        	};
+		function agarrar(){
+			//Aagarra lo que haya.
+			db.transaction("eventos")
+			.objectStore("eventos").openCursor().onsuccess = function(ev){
+				var cursor = event.target.result;
+		        //lo prepara y lo manda a la cocina.
+		        Cocinar(JSON.parse(cursor.value));
+			};
+		}
+            };
 
             function Cocinar(dataCruda){
             	
