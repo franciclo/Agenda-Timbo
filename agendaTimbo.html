@@ -73,7 +73,7 @@
     
     <!---- Cuando despierte el cuerpo, a cosechar. ---->
     
-    <body onload="Cosechar()">
+    <body onload="Cosechar('1wp2c-3N0Bw2cgdQyET_Oo1BRZtPmAT6yACfJGlue8Rs')">
         <div id="agenda_html"></div>
         <script type="text/javascript">
 
@@ -83,10 +83,8 @@
 	    //Cocinar(): ordenar la data, pasarla a un formato mas entendible, y darsela a Presentar().
 	    //Presentar(): recorrer la data para generar el html y mostrarlo.
 
-            function Cosechar(){
-
-		//Esta es la clave de identificacion unica de la spreadsheet en google.
-		var SpreadsheetId = "1wp2c-3N0Bw2cgdQyET_Oo1BRZtPmAT6yACfJGlue8Rs";
+            function Cosechar(SpreadsheetId){
+        	//SpreadsheetId: la clave de identificacion unica de la spreadsheet en google.
 
 		//Abrir la base de datos.
 		var requestDB = indexedDB.open("agendaTimbo");
@@ -253,10 +251,11 @@
                         });
                     }
                 }
-                ExportarWord();
+                //Una vez finalizada la presentación, se puede preparar el boton para exportar a Word.
+                Exportar();
             };
 
-	    function ExportarWord(){
+	    function Exportar(){
                 //Tomo la agenda generada.
                 var agenda = document.getElementById("agenda_html").innerHTML;
                 //La incorporo a una estructura html compatible con Word.
