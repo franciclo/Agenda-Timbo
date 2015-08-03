@@ -256,40 +256,36 @@
                 ExportarWord();
             };
 
-            function ExportarWord(){
+	    function ExportarWord(){
+                //Tomo la agenda generada.
                 var agenda = document.getElementById("agenda_html").innerHTML;
-                var htmlDocument = '<!DOCTYPE html><html xmlns:office="urn:schemas-microsoft-com:office:office" xmlns:word="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"> <head> <meta charset="UTF-8"><xml> <word:WordDocument> <word:View>Print</word:View> <word:Zoom>90</word:Zoom> <word:DoNotOptimizeForBrowser/> </word:WordDocument> </xml> <style type="text/css"> html{background-color: #000; } body{margin: 50px auto; background: #fff; padding: 10px 50px; max-width: 280px; } .titulo{font-weight: bold; font-style: italic; font-family: serif; } .dia{background: #000; color: #fff; padding: 0 2px; font-size: 20px; font-family: serif; } .categoria {padding: 4px 0 0 0; font-weight: bold; font-family: monospace; font-size: 15px; } .offline {position: absolute; background: rgb(80, 0, 0); color: rgb(87, 87, 87); top: 15px; font-size: 17px; width: 100%; left: 0; text-align: center; padding: 0; margin: 0; } .offline:hover{background: red; color: white; } p{font-family: arial; margin: 0; padding: 0 0 3px 0; } </style> </head> <body>'+agenda+'</body> </html>';
+                //La incorporo a una estructura html compatible con Word.
+                var htmlDocument = '<!DOCTYPE html><html xmlns:office="urn:schemas-microsoft-com:office:office" xmlns:word="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><xml><word:WordDocument><word:View>Print</word:View><word:Zoom>90</word:Zoom> <word:DoNotOptimizeForBrowser/></word:WordDocument></xml><style type="text/css">html{background-color: #000; }body{margin: 50px auto; background: #fff; padding: 10px 50px; max-width: 280px; } .titulo{font-weight: bold; font-style: italic; font-family: serif; } .dia{background: #000; color: #fff; padding: 0 2px; font-size: 20px; font-family: serif; } .categoria {padding: 4px 0 0 0; font-weight: bold; font-family: monospace; font-size: 15px; } .offline {position: absolute; background: rgb(80, 0, 0); color: rgb(87, 87, 87); top: 15px; font-size: 17px; width: 100%; left: 0; text-align: center; padding: 0; margin: 0; } .offline:hover{background: red; color: white; } p{font-family: arial; margin: 0; padding: 0 0 3px 0; }</style></head><body>'+agenda+'</body></html>';
+                //Genero el archivo binario.
                 var dataUri = "data:text/html," + encodeURIComponent(htmlDocument);
-                
+
+                //Creo el boton
                 var boton = document.createElement('a');
-                boton.appendChild(document.createTextNode("Exportar a Word"));
+                    boton.appendChild(document.createTextNode("Exportar a Word"));
+                    boton.className = 'boton';
 
-                boton.className = 'boton';
+                    //En el atributo download creo el nombre final del archivo y le fuerzo la extencion .doc
+                    var att_download = document.createAttribute("download");
+                    var hoy = new Date();
+                    var dd = (today.getDate()<10)?today.getDate():'0'+today.getDate();
+                    var mm = ((today.getMonth()+1)<10)?today.getMonth()+1:'0'+(today.getMonth()+1);
+                    var hoy = dd+'_del_'+mm;
+                    att_download.value = "agenda_al_"+today+".doc";                      
+                    boton.setAttributeNode(att_download);
 
-                var att_download = document.createAttribute("download");
+                    //En el atributo href coloco el archivo binario.
+                    var att_href = document.createAttribute("href");
+                    att_href.value = dataUri;                      
+                    boton.setAttributeNode(att_href);
 
-                var today = new Date();
-                var dd = today.getDate();
-                var mm = today.getMonth()+1; //January is 0!
-
-                if(dd<10){
-                    dd='0'+dd
-                } 
-                if(mm<10){
-                    mm='0'+mm
-                } 
-                var today = dd+'_del_'+mm;
-
-
-                att_download.value = "agenda_al_"+today+".doc";                      
-                boton.setAttributeNode(att_download);
-
-                var att_href = document.createAttribute("href");
-                att_href.value = dataUri;                      
-                boton.setAttributeNode(att_href);
-
+                //Mostrar boton.
                 document.body.appendChild(boton);
-            }
+            };
 
         </script>
     </body>
