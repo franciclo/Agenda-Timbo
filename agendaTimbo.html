@@ -273,10 +273,10 @@
                     //En el atributo download creo el nombre final del archivo y le fuerzo la extencion .doc
                     var att_download = document.createAttribute("download");
                     var hoy = new Date();
-                    var dd = (today.getDate()<10)?today.getDate():'0'+today.getDate();
-                    var mm = ((today.getMonth()+1)<10)?today.getMonth()+1:'0'+(today.getMonth()+1);
+                    var dd = (hoy.getDate()<10)?hoy.getDate():'0'+hoy.getDate();
+                    var mm = ((hoy.getMonth()+1)<10)?hoy.getMonth()+1:'0'+(hoy.getMonth()+1);
                     var hoy = dd+'_del_'+mm;
-                    att_download.value = "agenda_al_"+today+".doc";                      
+                    att_download.value = "agenda_al_"+hoy+".doc";                      
                     boton.setAttributeNode(att_download);
 
                     //En el atributo href coloco el archivo binario.
