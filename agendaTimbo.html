@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>Agenda Timbo</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style type="text/css">
+        /*
+			ESTILOS GRAFICOS
+        */
+        html{
+            background-color: #000;
+        }
+        body{
+            margin: 50px auto;
+            background: #fff;
+            padding: 10px 50px;
+            max-width: 280px;
+        }
+        .titulo{
+            font-weight: bold;
+            font-style: italic;
+            font-family: serif;
+        }
+        .dia{
+            background: #000;
+            color: #fff;
+            padding: 0 2px;
+            font-size: 20px;
+            font-family: serif;
+        }
+        .categoria {
+            padding: 4px 0 0 0;
+            font-weight: bold;
+            font-family: monospace;
+            font-size: 15px;
+        }
+        .offline {
+		  position: absolute;
+		  background: rgb(80, 0, 0);
+		  color: rgb(87, 87, 87);
+		  top: 15px;
+		  font-size: 17px;
+		  width: 100%;
+		  left: 0;
+		  text-align: center;
+		  padding: 0;
+		  margin: 0;
+		}
+		.offline:hover{
+			background: red;
+		  	color: white;
+		}
+        p{
+            font-family: arial;
+            margin: 0;
+            padding: 0 0 3px 0;
+        }
+        .boton {
+          position: fixed;
+          top: 0;
+          right: 0;
+          text-align: center;
+          background-color: green;
+          margin: 5px;
+          color: white;
+          font-family: monospace;
+          text-decoration: none;
+          padding: 7px;
+        }
+        </style>
+    </head>
+    
+    <!---- Cuando despierte el cuerpo, a cosechar. ---->
+    
+    <body onload="Cosechar()">
+        <div id="agenda_html"></div>
+        <script type="text/javascript">
+
+        	//Creando la agenda cultural timbo, en tres humanos pasos.
+
+        	//Cosechar(): buscar la data, conservarla en la base (db) y darsela a Cocinar().
+        	//Cocinar(): ordenar la data, pasarla a un formato mas entendible, y darsela a Presentar().
+        	//Presentar(): recorrer la data para generar el html y mostrarlo.
+
+        	function Cosechar(){
+
+        		//Esta es la clave de identificacion unica de la spreadsheet en google.
+        		var SpreadsheetId = "1wp2c-3N0Bw2cgdQyET_Oo1BRZtPmAT6yACfJGlue8Rs";
+
+        		//Abrir la base de datos.
+				var requestDB = indexedDB.open("agendaTimbo");
+				var db = "";
+
+				//Si no existe aún la tabla para los eventos, crear una nueva.
+        		requestDB.onupgradeneeded = function(event) {
+				  db = event.target.result;
+				  var objectStore = db.createObjectStore("eventos", { autoIncrement : true });
+				};
+
+				//Base lista para usar.
+				requestDB.onsuccess = function (evt) {
+					db = requestDB.result;
+					var xhr = new XMLHttpRequest();
+
+					//Buscar la data a google
+					//Cambiar el /1/ si no anda, representa a la cantidad de spreadsheets que tengas, creo..
+				    xhr.open("GET", "https://spreadsheets.google.com/feeds/cells/"+SpreadsheetId+"/1/public/basic?alt=json", false);
+				    try{
+				    	xhr.send();
+					}catch(err){
+						//No hay conexion a internet, avisar.
+						var offline = document.createElement('p');
+	                    offline.className = 'offline';
+	                    offline.appendChild(document.createTextNode("SIN CONEXION - MOSTRANDO DATA GUARDADA"));
+	                    document.body.appendChild(offline);
+	                    //Agarrar la data vieja guardada en la base y chau.
+						agarrar();
+						return;
+					}
+
+					//Almacenar la nueva data en la base.
+					//Primero borro lo viejo.
+					db.transaction(["eventos"], "readwrite")
+					.objectStore("eventos").clear().onsuccess = function(){
+						//Despues guardo lo nuevo.
+						db.transaction("eventos", "readwrite")
+						.objectStore("eventos").add(xhr.responseText).onsuccess = function(){
+							//Agarro la data recien cosechada.
+							agarrar();
+						};
+					};
+				};
+
+				function agarrar(){
+					//Aagarra lo que haya.
+					db.transaction("eventos")
+					.objectStore("eventos").openCursor().onsuccess = function(ev){
+						var cursor = event.target.result;
+				        //lo prepara y lo manda a la cocina.
+				        Cocinar(JSON.parse(cursor.value));
+					};
+				}
+        	};
+
+            function Cocinar(dataCruda){
+            	
+            	//Preparar las variables que se van a usar. 
+                var nombresDatos = [];
+                var porFila = [];
+                var porFilaYNombre = [];
+                var porDia = [];
+                var diasSemana = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+                var porCategoria, dia, fecha;
+
+                dataCruda.feed.entry.map(function(v){
+                	
+                    //Extraigo solo lo que voy a usar. El contenido y el número de fila.
+                    return { "fila" : v.title.$t.replace(/\D/g,''), "contenido" : v.content.$t };
+                }).forEach(function(v){
+
+                    //Agrupo por fila.
+                    if (typeof porFila[v.fila] != 'object') porFila[v.fila] = [];
+                    porFila[v.fila].push(v.contenido);
+                });
+
+                //Descarto la fila 0, esta vacia siempre.
+                porFila.shift();
+
+                //En la primer fila estan los nombres de columna, los separo.
+                nombresDatos = porFila.shift();
+
+                //Nombrar a los campos segun la columna.
+                porFila.forEach(function(v, i, a){
+                    if (typeof porFilaYNombre[i] != 'object') porFilaYNombre[i] = [];
+                    v.forEach(function(val, ind, arr){
+                        porFilaYNombre[i][nombresDatos[ind].replace(/\s/g,'_')] = val;
+                    });
+                });
+
+                //Ordeno segun fecha y hora, de pasado a futuro.
+                porFilaYNombre.sort(function(a,b){
+                    return new Date(a.fecha_y_hora) - new Date(b.fecha_y_hora);
+                });
+
+                //Agrupo por dia. 
+                //Supongo que al ser mensual no hay que checkear por mes?
+                porFilaYNombre.forEach(function(v){
+                    fecha = new Date(v.fecha_y_hora);
+                    dia = diasSemana[fecha.getDay()] +'_'+ fecha.getDate();
+                    if (typeof porDia[dia] != 'object') porDia[dia] = [];
+                    porDia[dia].push(v);
+                });
+
+                //Agrupo por categoria y por dia.
+                for(dia in porDia){
+                    porCategoria = [];
+                    porDia[dia].forEach(function(v){
+                        if (typeof porCategoria[v.categoria] != 'object') porCategoria[v.categoria] = [];
+                        porCategoria[v.categoria.replace(/\s/g,'_')].push(v);
+                    });
+                    porDia[dia] = porCategoria;
+                }
+
+                //Lista la data! solo falta emplatar y servir.
+                Presentar(porDia);
+            };
+
+            function Presentar(eventos){
+
+                for(dia in eventos){
+
+                	//Dia
+                    var dia_header = document.createElement('p');
+                    dia_header.className = 'dia';
+                    dia_header.appendChild(document.createTextNode(dia.replace('_',' ')));
+                    document.getElementById("agenda_html").appendChild(dia_header);
+                    
+                    for(categoria in eventos[dia]){
+
+                    	//Categoria
+                        var categoria_header = document.createElement('p');
+                        categoria_header.className = 'categoria';
+                        categoria_header.appendChild(document.createTextNode(categoria.replace('_',' ').toUpperCase()));
+                        document.getElementById("agenda_html").appendChild(categoria_header);
+
+                        eventos[dia][categoria].forEach(function(val){
+
+                        	//Evento
+                            var evento = document.createElement('p');
+
+                            	//Titulo
+                                var titulo = document.createElement('span');
+                                titulo.className = 'titulo';
+                                titulo.appendChild(document.createTextNode('> '+val.titulo+', '));
+                                evento.appendChild(titulo);
+
+                                //Descripción
+                                var descripcion = document.createElement('span');
+                                descripcion.appendChild(document.createTextNode(val.descripcion+', '));
+                                evento.appendChild(descripcion);
+
+                                //Hora
+                                var fecha = new Date(val.fecha_y_hora);
+                                var laHora = ((fecha.getHours() > 10)?fecha.getHours():'0'+fecha.getHours())+':'+((fecha.getMinutes() > 10)?fecha.getMinutes():'0'+fecha.getMinutes())+'hs.';
+                                var hora = document.createElement('span');
+                                hora.appendChild(document.createTextNode(laHora));
+                                evento.appendChild(hora);
+                                
+                            //Finalmente, servir.
+                            document.getElementById("agenda_html").appendChild(evento);
+
+                        });
+                    }
+                }
+                ExportarWord();
+            };
+
+            function ExportarWord(){
+                var agenda = document.getElementById("agenda_html").innerHTML;
+                var htmlDocument = '<!DOCTYPE html><html xmlns:office="urn:schemas-microsoft-com:office:office" xmlns:word="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"> <head> <meta charset="UTF-8"><xml> <word:WordDocument> <word:View>Print</word:View> <word:Zoom>90</word:Zoom> <word:DoNotOptimizeForBrowser/> </word:WordDocument> </xml> <style type="text/css"> html{background-color: #000; } body{margin: 50px auto; background: #fff; padding: 10px 50px; max-width: 280px; } .titulo{font-weight: bold; font-style: italic; font-family: serif; } .dia{background: #000; color: #fff; padding: 0 2px; font-size: 20px; font-family: serif; } .categoria {padding: 4px 0 0 0; font-weight: bold; font-family: monospace; font-size: 15px; } .offline {position: absolute; background: rgb(80, 0, 0); color: rgb(87, 87, 87); top: 15px; font-size: 17px; width: 100%; left: 0; text-align: center; padding: 0; margin: 0; } .offline:hover{background: red; color: white; } p{font-family: arial; margin: 0; padding: 0 0 3px 0; } </style> </head> <body>'+agenda+'</body> </html>';
+                var dataUri = "data:text/html," + encodeURIComponent(htmlDocument);
+                
+                var boton = document.createElement('a');
+                boton.appendChild(document.createTextNode("Exportar a Word"));
+
+                boton.className = 'boton';
+
+                var att_download = document.createAttribute("download");
+
+                var today = new Date();
+                var dd = today.getDate();
+                var mm = today.getMonth()+1; //January is 0!
+
+                if(dd<10){
+                    dd='0'+dd
+                } 
+                if(mm<10){
+                    mm='0'+mm
+                } 
+                var today = dd+'_del_'+mm;
+
+
+                att_download.value = "agenda_al_"+today+".doc";                      
+                boton.setAttributeNode(att_download);
+
+                var att_href = document.createAttribute("href");
+                att_href.value = dataUri;                      
+                boton.setAttributeNode(att_href);
+
+                document.body.appendChild(boton);
+            }
+
+        </script>
+    </body>
+</html>
