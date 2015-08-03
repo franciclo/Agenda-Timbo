@@ -6,7 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style type="text/css">
         /*
-			ESTILOS GRAFICOS
+		ESTILOS GRAFICOS
         */
         html{
             background-color: #000;
@@ -29,44 +29,44 @@
             font-size: 20px;
             font-family: serif;
         }
-        .categoria {
+        .categoria{
             padding: 4px 0 0 0;
             font-weight: bold;
             font-family: monospace;
             font-size: 15px;
         }
-        .offline {
-		  position: absolute;
-		  background: rgb(80, 0, 0);
-		  color: rgb(87, 87, 87);
-		  top: 15px;
-		  font-size: 17px;
-		  width: 100%;
-		  left: 0;
-		  text-align: center;
-		  padding: 0;
-		  margin: 0;
-		}
-		.offline:hover{
-			background: red;
-		  	color: white;
-		}
+	.offline{
+	    position: absolute;
+	    background: rgb(80, 0, 0);
+	    color: rgb(87, 87, 87);
+	    top: 15px;
+	    font-size: 17px;
+	    width: 100%;
+	    left: 0;
+	    text-align: center;
+	    padding: 0;
+	    margin: 0;
+	}
+	.offline:hover{
+	    background: red;
+	    color: white;
+	}
         p{
             font-family: arial;
             margin: 0;
             padding: 0 0 3px 0;
         }
-        .boton {
-          position: fixed;
-          top: 0;
-          right: 0;
-          text-align: center;
-          background-color: green;
-          margin: 5px;
-          color: white;
-          font-family: monospace;
-          text-decoration: none;
-          padding: 7px;
+        .boton{
+            position: fixed;
+            top: 0;
+            right: 0;
+            text-align: center;
+            background-color: green;
+            margin: 5px;
+            color: white;
+            font-family: monospace;
+            text-decoration: none;
+            padding: 7px;
         }
         </style>
     </head>
@@ -74,9 +74,11 @@
     <!---- Cuando despierte el cuerpo, a cosechar. ---->
     
     <body onload="Cosechar('1wp2c-3N0Bw2cgdQyET_Oo1BRZtPmAT6yACfJGlue8Rs')">
-        <div id="agenda_html"></div>
+    	
+    	<!-- Contenedor de la agenda -->
+        <div id="agenda"></div>
+        
         <script type="text/javascript">
-
 	    //Creando la agenda cultural timbo, en tres humanos pasos.
 
 	    //Cosechar(): buscar la data, conservarla en la base (db) y darsela a Cocinar().
@@ -135,8 +137,8 @@
 			db.transaction("eventos")
 			.objectStore("eventos").openCursor().onsuccess = function(ev){
 				var cursor = event.target.result;
-		        //lo prepara y lo manda a la cocina.
-		        Cocinar(JSON.parse(cursor.value));
+			        //lo prepara y lo manda a la cocina.
+			        Cocinar(JSON.parse(cursor.value));
 			};
 		}
             };
