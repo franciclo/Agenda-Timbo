@@ -13,5 +13,3 @@ Estos tres pasos resuenan con el modo de ordenar el codigo, llamado MVC (Modelo,
 Mi inteción es mostrar que la escencia de esta tecnica informatica es el reflejo de la mas primitiva naturaleza humana.<br/>
 Asi como otras tecnicas, metodos o soluciones que se dan en las tecnologias.<br/>
 Y que no es un mundo de maquinas, onda matrix, y que ojalá algun dia la tecnologia encuentre su lugar en la biosfera, y ojala nosotros tambien.
-
-Pasen y vean, si, me refiero que lean el código fuente de agendaTimbo.html
